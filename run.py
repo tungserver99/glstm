@@ -5,10 +5,8 @@ from dataloader import dataloader
 import evaluations.clustering
 import evaluations.topic_coherence
 import evaluations.topic_diversity
-import models.GloCOM.GloCOM
-import models.KNNTM.KNNTM
+import models.GLSTM.GLSTM
 import trainer.Trainer
-import trainer.KNNTMTrainer
 
 from utils import misc, seed
 import wandb
@@ -18,9 +16,9 @@ RESULT_DIR = 'results'
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=str, 
-                        choices=['GloCOM', 'KNNTM'], 
+                        choices=['GLSTM'], 
                         required=True,
-                        help='Model name, current supports: GloCOM, KNNTM')
+                        help='Model name, current supports: GLSTM')
     
     args, _ = parser.parse_known_args()
 
@@ -31,25 +29,17 @@ def parse_args():
     )
 
     parser.add_argument('--model', type=str, 
-                        choices=['GloCOM', 'KNNTM'], 
+                        choices=['GLSTM'], 
                         required=True,
-                        help='Model name, current supports: GloCOM, KNNTM')
+                        help='Model name, current supports: GLSTM')
     parser.add_argument('--wandb_prj', type=str, 
-                        default="glocom",
+                        default="GLSTM",
                         help='wandb project name')
 
 
-    if model == "GloCOM":
-        parser.add_argument("--aug_coef", type=float, default=0.5)
-        parser.add_argument("--prior_var", type=float, default=0.1)
-        parser.add_argument("--weight_loss_ECR", type=float, default=60.0)
-
-    if model == "KNNTM":
-        parser.add_argument('--alpha', type=float, default=1.0)
-        parser.add_argument('--num_k', type=int, default=30)
-        parser.add_argument('--eta', type=float, default=0.2)
-        parser.add_argument('--rho', type=float, default=0.6)
-        parser.add_argument("--p_epochs", type=int, default=20, help="Training epochs without augmentation")
+    parser.add_argument("--aug_coef", type=float, default=1.0)
+    parser.add_argument("--prior_var", type=float, default=0.1)
+    parser.add_argument("--weight_loss_ECR", type=float, default=40.0)
 
     parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train the model')
@@ -78,45 +68,30 @@ if __name__ == "__main__":
     print(args)
     seed.seedEverything(args.seed)
     
-    prj = args.wandb_prj if args.wandb_prj else 'glocom'
+    prj = args.wandb_prj if args.wandb_prj else 'GLSTM'
     wandb.login()
     wandb.init(project=prj, config=args)
     wandb.log({'time_stamp': current_time})
 
     ########################### Dataset ####################################
-    if args.model == "GloCOM":
-        dataset = dataloader.BasicDatasetWithGlobal(dataset_dir=args.data_dir,
+    dataset = dataloader.BasicDatasetWithGlobal(dataset_dir=args.data_dir,
                                                       batch_size=args.batch_size,
                                                       read_labels=True,
                                                       global_dir=args.global_dir,
                                                       device=args.device)
-    if args.model == "KNNTM":
-        dataset = dataloader.BasicDatasetWithIndex(dataset_dir=args.data_dir,
-                                                      batch_size=args.batch_size,
-                                                      read_labels=True,
-                                                      device=args.device)
     
 
     ########################### Model and Training ####################################
-    if args.model == "GloCOM":
-        model = models.GloCOM.GloCOM.GloCOM(dataset.vocab_size, num_topics=args.num_topics, pretrained_WE=dataset.pretrained_WE,
+    if args.model == "GLSTM":
+        model = models.GLSTM.GLSTM.GLSTM(dataset.vocab_size, num_topics=args.num_topics, pretrained_WE=dataset.pretrained_WE,
                                      aug_coef=args.aug_coef,
                                      prior_var=args.prior_var,
                                      weight_loss_ECR=args.weight_loss_ECR)
-    if args.model == "KNNTM":
-        model = models.KNNTM.KNNTM.KNNTM(dataset.vocab_size, len(dataset.train_data), dataset.train_data,
-                                        os.path.join(args.data_dir, "KNNTM", "M_cos.npz"), 
-                                        os.path.join(args.data_dir, "KNNTM", "M_coo.npz"), 
-                                        num_topics=args.num_topics,
-                                        alpha=args.alpha, 
-                                        num_k=args.num_k, 
-                                        eta=args.eta, 
-                                        rho=args.rho)
         
     model = model.to(args.device)
 
     # trainer
-    if args.model == "GloCOM":
+    if args.model == "GLSTM":
         trainer = trainer.Trainer.Trainer(model=model,
                                           dataset=dataset, 
                                           epochs=args.epochs,
@@ -127,19 +102,6 @@ if __name__ == "__main__":
                                           lr_step_size=args.lr_step_size,
                                           verbose=True)
 
-    if args.model == "KNNTM":
-        trainer = trainer.KNNTMTrainer.KNNTMTrainer(model=model,
-                                                dataset=dataset, 
-                                                epochs=args.epochs,
-                                                p_epoches=args.p_epochs,
-                                                learning_rate=args.lr,
-                                                batch_size=args.batch_size,
-                                                num_top_words=args.num_top_word,
-                                                lr_scheduler=args.lr_scheduler,
-                                                lr_step_size=args.lr_step_size,
-                                                verbose=True)
-
-   
     
     trainer.train()
 

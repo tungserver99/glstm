@@ -1,4 +1,4 @@
-# Code for GloCOM: A Short Text Neural Topic Model via Global Clustering Context
+# Code for GLSTM: Global and Local context in Short text Neural Topic Model
 
 ## Preparing Libraries
 
@@ -32,42 +32,15 @@
 ## Running
 To run and evaluate our model, run the following command:
 ```
-python run.py --model GloCOM --num_topics 50 --data_dir data/SearchSnippets 
+python run.py --wandb_prj glolo-knn --model GLSTM --global_dir global_knn_30 --num_topics 50 --data_dir data/StackOverflow
 ```
 
 You can also specify additional arguments when running the model:
 
 ```
---aug_coef <float> # Default: 0.5 - Coefficient for augmentation 
+--aug_coef <float> # Default: 1.0 - Coefficient for augmentation 
 --prior_var <float> # Default: 0.1 - Prior variance
---weight_loss_ECR <float> # Default: 60.0 - Weight for ECR loss
-```
-
-## KNNTM Running
-
-We provide KNNTM OT distances and code in [this link](https://drive.google.com/file/d/1ArmApnG2exZNp8zZ-F-bUVEGj7Qi2F92/view?usp=sharing). Unzip the file and the folder structure should be like this:
-
-    ```
-    |- data
-        | - SearchSnippets
-            | - KNNTM/
-                | - M_coo.npz
-                | - M_cos.npz
-    ```
-
-To run the KNNTM model
-
-```
-python run.py --model KNNTM --num_topics 50 --data_dir data/SearchSnippets
-```
-
-You can also specify additional arguments when running the model:
-```
---alpha <float> # Default: 1.0
---num_k <int> # Default: 30 
---eta <float> # Default: 0.2 
---rho <float> # Default: 0.6 
---p_epochs <int> # Default: 20
+--weight_loss_ECR <float> # Default: 40.0 - Weight for ECR loss
 ```
 
 ## Acknowledgement
