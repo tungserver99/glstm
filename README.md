@@ -32,7 +32,7 @@
 ## Running
 To run and evaluate our model, run the following command:
 ```
-python run.py --wandb_prj glolo-knn --model GLSTM --global_dir global_knn_30 --num_topics 50 --data_dir data/StackOverflow
+python run.py --wandb_prj glolo-knn --model GLSTM --global_dir global_knn_30 --num_topics 50 --data_dir data/SearchSnippets
 ```
 
 You can also specify additional arguments when running the model:
