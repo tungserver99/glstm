@@ -6,11 +6,6 @@ from models.GLSTM.ECR import ECR
 from models.GLSTM.TopicDistQuant import TopicDistQuant
 
 class GLSTM(nn.Module):
-    '''
-        GLSTM: A Short Text Neural Topic Model via Global Clustering Context
-
-        Quang Duc at el.
-    '''
     def __init__(self, vocab_size, num_topics=50, en_units=200, 
                  dropout=0.0, pretrained_WE=None, embed_size=200, 
                  sinkhorn_alpha=20.0, sinkhorn_max_iter=100,
