@@ -66,15 +66,16 @@ class BasicDatasetWithGlobal:
             self.contextual_embed_size = self.train_contextual_embed.shape[1]
 
         if global_dir:
-            self.global_bow_maps = np.stack([self.global_bow[idx_doc] for idx_doc in self.global_maps])
+            self.global_bow_maps_train = np.stack([self.global_bow[idx_doc] for idx_doc in self.train_global_maps])
+            self.global_bow_maps_test = np.stack([self.global_bow[idx_doc] for idx_doc in self.test_global_maps])
 
         if as_tensor:
             if contextual_embed:
                 self.train_data = np.concatenate((self.train_bow, self.train_contextual_embed), axis=1)
                 self.test_data = np.concatenate((self.test_bow, self.test_contextual_embed), axis=1)
             if global_dir:
-                self.train_data = np.concatenate((self.train_bow, self.global_bow_maps), axis=1)
-                self.test_data = np.concatenate((self.test_bow, self.global_bow_maps), axis=1) # test and train is the same for now
+                self.train_data = np.concatenate((self.train_bow, self.global_bow_maps_train), axis=1)
+                self.test_data = np.concatenate((self.test_bow, self.global_bow_maps_test), axis=1) # test and train is the same for now
 
             if not contextual_embed and not global_dir:
                 self.train_data = self.train_bow
@@ -88,27 +89,32 @@ class BasicDatasetWithGlobal:
 
     def load_data(self, path, read_labels, global_dir=None):
 
-        self.train_bow = scipy.sparse.load_npz(f'{path}/bow.npz').toarray().astype('float32')
+        self.train_bow = scipy.sparse.load_npz(f'{path}/train_bow.npz').toarray().astype('float32')
 
         # Basically in short text TM problem, we evaluate on the training set. So in here, test_bow is basically test_bow
-        self.test_bow = scipy.sparse.load_npz(f'{path}/bow.npz').toarray().astype('float32')
+        self.test_bow = scipy.sparse.load_npz(f'{path}/test_bow.npz').toarray().astype('float32')
         self.pretrained_WE = scipy.sparse.load_npz(f'{path}/word_embeddings.npz').toarray().astype('float32')
 
         # Similar reasons like above
-        self.train_texts = file_utils.read_text(f'{path}/texts.txt')
-        self.test_texts = file_utils.read_text(f'{path}/texts.txt')
+        self.train_texts = file_utils.read_text(f'{path}/train_texts.txt')
+        self.test_texts = file_utils.read_text(f'{path}/test_texts.txt')
 
         if read_labels:
             # Similar reasons like above
-            self.train_labels = np.loadtxt(f'{path}/labels.txt', dtype=int)
-            self.test_labels = np.loadtxt(f'{path}/labels.txt', dtype=int)
+            self.train_labels = np.loadtxt(f'{path}/train_labels.txt', dtype=int)
+            self.test_labels = np.loadtxt(f'{path}/test_labels.txt', dtype=int)
         
         if global_dir:
             self.global_bow = scipy.sparse.load_npz(os.path.join(path, global_dir, "global_bow.npz")).toarray().astype('float32')
-            self.global_maps = []
-            with open(os.path.join(path, global_dir, "global_maps.txt")) as fIn:
-                for data in fIn:
-                    self.global_maps.append(int(data.strip()))
+            self.train_global_maps = []
+            with open(os.path.join(path, global_dir, "train_global_maps.txt")) as ftr:
+                for data in ftr:
+                    self.train_global_maps.append(int(data.strip()))
+                    
+            self.test_global_maps = []
+            with open(os.path.join(path, global_dir, "test_global_maps.txt")) as ft:
+                for data in ft:
+                    self.test_global_maps.append(int(data.strip()))
 
         self.vocab = file_utils.read_text(f'{path}/vocab.txt')
 
@@ -169,18 +175,18 @@ class BasicDatasetWithIndex:
     def load_data(self, path, read_labels):
 
         # Basically in short text TM problem, we evaluate on the training set. So in here, test_bow is basically test_bow
-        self.train_bow = scipy.sparse.load_npz(f'{path}/bow.npz').toarray().astype('float32')
-        self.test_bow = scipy.sparse.load_npz(f'{path}/bow.npz').toarray().astype('float32')
+        self.train_bow = scipy.sparse.load_npz(f'{path}/train_bow.npz').toarray().astype('float32')
+        self.test_bow = scipy.sparse.load_npz(f'{path}/test_bow.npz').toarray().astype('float32')
         self.pretrained_WE = scipy.sparse.load_npz(f'{path}/word_embeddings.npz').toarray().astype('float32')
 
         # Similar reasons like above
-        self.train_texts = file_utils.read_text(f'{path}/texts.txt')
-        self.test_texts = file_utils.read_text(f'{path}/texts.txt')
+        self.train_texts = file_utils.read_text(f'{path}/train_texts.txt')
+        self.test_texts = file_utils.read_text(f'{path}/test_texts.txt')
         
         if read_labels:
             # Similar reasons like above
-            self.train_labels = np.loadtxt(f'{path}/labels.txt', dtype=int)
-            self.test_labels = np.loadtxt(f'{path}/labels.txt', dtype=int)
+            self.train_labels = np.loadtxt(f'{path}/train_labels.txt', dtype=int)
+            self.test_labels = np.loadtxt(f'{path}/test_labels.txt', dtype=int)
 
         self.vocab = file_utils.read_text(f'{path}/vocab.txt')
 

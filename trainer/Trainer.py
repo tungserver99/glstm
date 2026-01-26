@@ -81,7 +81,7 @@ class Trainer:
                 for key in loss_rst_dict:
                     output_log += f' {key}: {loss_rst_dict[key] / data_size :.3f}'
 
-                print(output_log)
+                # print(output_log)
 
         top_words = self.get_top_words()
         train_theta = self.test(self.dataset.train_data)
